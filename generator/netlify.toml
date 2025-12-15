@@ -1,0 +1,19 @@
+# Netlify 部署設定
+
+[build]
+  # 發布目錄（靜態網站不需要建置）
+  publish = "."
+
+# 設定 Headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+
+# 重新導向設定
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

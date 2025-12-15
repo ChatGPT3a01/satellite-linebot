@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>低軌衛星氣象 Line Bot - GAS 程式碼生成器</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🛰️ 低軌衛星氣象 Line Bot</h1>
+            <p class="subtitle">GAS 程式碼生成器</p>
+        </header>
+
+        <!-- 說明區塊 -->
+        <section class="info-section">
+            <h2>📖 使用說明</h2>
+            <div class="info-content">
+                <p>此工具可自動生成 <strong>低軌衛星氣象 Line Bot</strong> 的 Google Apps Script 程式碼。</p>
+                <p>填寫以下設定後，即可下載完整的 GAS 程式碼，部署到 Google Apps Script 使用。</p>
+                <div class="features">
+                    <span class="feature-tag">🌤️ 天氣查詢</span>
+                    <span class="feature-tag">🌊 洋流資料</span>
+                    <span class="feature-tag">🛰️ 衛星雲圖</span>
+                    <span class="feature-tag">📊 互動式選單</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 表單 -->
+        <form id="configForm">
+            <!-- Line Bot 設定 -->
+            <section class="form-section">
+                <h2>💬 Line Bot 設定</h2>
+                <div class="form-group">
+                    <label for="lineToken">
+                        Channel Access Token <span class="required">*</span>
+                    </label>
+                    <input type="text" id="lineToken" name="lineToken"
+                           placeholder="請輸入 Line Channel Access Token"
+                           required>
+                    <p class="hint">
+                        前往 <a href="https://developers.line.biz/console/" target="_blank">Line Developers Console</a> 取得
+                    </p>
+                </div>
+            </section>
+
+            <!-- API 設定 -->
+            <section class="form-section">
+                <h2>🔑 API 設定</h2>
+
+                <div class="form-group">
+                    <label for="openweatherKey">
+                        OpenWeatherMap API Key <span class="required">*</span>
+                        <span class="badge free">免費</span>
+                    </label>
+                    <input type="text" id="openweatherKey" name="openweatherKey"
+                           placeholder="請輸入 OpenWeatherMap API Key"
+                           required>
+                    <p class="hint">
+                        <a href="https://openweathermap.org/api" target="_blank">點此註冊</a> - 免費方案：每分鐘 60 次請求
+                    </p>
+                </div>
+
+                <div class="form-group">
+                    <label for="stormglassKey">
+                        Stormglass API Key <span class="required">*</span>
+                        <span class="badge free">免費</span>
+                    </label>
+                    <input type="text" id="stormglassKey" name="stormglassKey"
+                           placeholder="請輸入 Stormglass API Key"
+                           required>
+                    <p class="hint">
+                        <a href="https://stormglass.io/" target="_blank">點此註冊</a> - 免費方案：每天 10 次請求
+                    </p>
+                </div>
+            </section>
+
+            <!-- Google Sheet 設定 -->
+            <section class="form-section">
+                <h2>📊 Google Sheet 設定</h2>
+                <div class="form-group">
+                    <label for="sheetId">
+                        Google Sheet ID <span class="required">*</span>
+                    </label>
+                    <input type="text" id="sheetId" name="sheetId"
+                           placeholder="請輸入 Google Sheet ID"
+                           required>
+                    <p class="hint">
+                        從試算表網址取得：<code>https://docs.google.com/spreadsheets/d/<strong>[ID在這裡]</strong>/edit</code>
+                    </p>
+                </div>
+
+                <div class="auto-sheets">
+                    <p>📝 程式會自動建立以下工作表：</p>
+                    <ul>
+                        <li>查詢記錄 - 記錄使用者查詢</li>
+                        <li>天氣資料 - 儲存天氣 API 資料</li>
+                        <li>海洋資料 - 儲存洋流 API 資料</li>
+                        <li>使用者狀態 - 記錄互動狀態</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- 生成按鈕 -->
+            <div class="generate-section">
+                <button type="button" id="generateBtn" class="btn-generate">
+                    🚀 生成 GAS 程式碼
+                </button>
+            </div>
+        </form>
+
+        <!-- 程式碼輸出區 -->
+        <section class="output-section" id="outputSection" style="display: none;">
+            <h2>📋 生成的程式碼</h2>
+            <div class="output-actions">
+                <button type="button" id="copyBtn" class="btn-action">
+                    📋 複製程式碼
+                </button>
+                <button type="button" id="downloadBtn" class="btn-action btn-download">
+                    💾 下載 Code.gs
+                </button>
+            </div>
+            <div class="code-container">
+                <pre id="codeOutput"><code></code></pre>
+            </div>
+            <div class="success-message" id="successMessage" style="display: none;">
+                ✅ 已複製到剪貼簿！
+            </div>
+        </section>
+
+        <!-- 使用流程 -->
+        <section class="form-section">
+            <h2>🔧 部署步驟</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h4>建立 Google Sheet</h4>
+                        <p>建立一個新的 Google 試算表，記下 ID</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h4>開啟 Apps Script</h4>
+                        <p>在試算表中點擊「擴充功能」→「Apps Script」</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h4>貼上程式碼</h4>
+                        <p>將生成的程式碼貼到編輯器中</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h4>部署為 Web App</h4>
+                        <p>點擊「部署」→「新增部署作業」→「網頁應用程式」</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <h4>設定 Line Webhook</h4>
+                        <p>將部署網址貼到 Line Developers 的 Webhook URL</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 機器人指令說明 -->
+        <section class="form-section">
+            <h2>💡 機器人使用方式</h2>
+            <div class="bot-usage">
+                <p>部署完成後，使用者可以這樣操作：</p>
+                <div class="usage-flow">
+                    <div class="flow-item">
+                        <span class="flow-input">輸入「低軌衛星」</span>
+                        <span class="flow-arrow">→</span>
+                        <span class="flow-output">顯示主選單</span>
+                    </div>
+                    <div class="flow-item">
+                        <span class="flow-input">輸入數字 1-5</span>
+                        <span class="flow-arrow">→</span>
+                        <span class="flow-output">選擇功能</span>
+                    </div>
+                    <div class="flow-item">
+                        <span class="flow-input">選擇地區 1-8</span>
+                        <span class="flow-arrow">→</span>
+                        <span class="flow-output">取得資料</span>
+                    </div>
+                </div>
+                <div class="commands-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>選項</th>
+                                <th>功能</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>1</td><td>🌤️ 查詢天氣狀況</td></tr>
+                            <tr><td>2</td><td>🌊 查詢海洋/洋流資料</td></tr>
+                            <tr><td>3</td><td>🛰️ 取得衛星雲圖連結</td></tr>
+                            <tr><td>4</td><td>📊 查詢所有資料</td></tr>
+                            <tr><td>5</td><td>📖 顯示使用說明</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-links">
+                <a href="https://www.facebook.com/iddmail" target="_blank" class="footer-link">📘 阿亮老師 FB</a>
+                <a href="https://www.youtube.com/@Liang-yt02" target="_blank" class="footer-link">🎥 阿亮老師 YouTube</a>
+                <a href="https://www.facebook.com/groups/2754139931432955" target="_blank" class="footer-link">🔬 3A科技實驗室</a>
+            </div>
+            <p style="margin-top: 20px;">
+                <strong>API 來源：</strong>
+                <a href="https://openweathermap.org/" target="_blank">OpenWeatherMap</a> |
+                <a href="https://stormglass.io/" target="_blank">Stormglass</a> |
+                <a href="https://developers.line.biz/" target="_blank">Line Messaging API</a>
+            </p>
+            <p class="copyright">© 2025 低軌衛星氣象 Line Bot | 作者：曾慶良 阿亮老師</p>
+        </footer>
+    </div>
+
+    <script src="generator.js"></script>
+</body>
+</html>

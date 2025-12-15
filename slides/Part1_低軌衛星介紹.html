@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Part 1 - 低軌衛星介紹</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            color: #333;
+        }
+
+        /* 導航列 */
+        .nav-bar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
+            z-index: 10000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .nav-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .nav-buttons { display: flex; gap: 12px; }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        /* 導航箭頭 */
+        .nav-arrow {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.25);
+            color: white;
+            width: 60px; height: 60px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.4);
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 9000;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .nav-arrow:hover {
+            background: rgba(255,255,255,0.5);
+            transform: translateY(-50%) scale(1.1);
+        }
+        .prev-arrow { left: 30px; }
+        .next-arrow { right: 30px; }
+        .nav-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        /* 投影片容器 */
+        .slide-container {
+            width: 100%;
+            height: 100vh;
+            padding-top: 60px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .slide {
+            position: absolute;
+            top: 60px; left: 0;
+            width: 100%;
+            height: calc(100vh - 60px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: 10;
+        }
+
+        .slide.active {
+            display: flex;
+            opacity: 1;
+            z-index: 20;
+        }
+
+        /* 內容卡片 */
+        .content-card {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            padding: 60px;
+            max-width: 1400px;
+            width: 95%;
+            max-height: 88vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        /* 標題樣式 */
+        h1 { color: #1e3c72; font-size: 56px; margin-bottom: 24px; text-align: center; }
+        h2 { color: #2a5298; font-size: 38px; margin-bottom: 35px; border-bottom: 3px solid #1e3c72; padding-bottom: 12px; }
+        h3 { color: #1e3c72; font-size: 26px; margin: 30px 0 15px 0; }
+        h4 { color: #4facfe; font-size: 20px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
+        p, li { font-size: 20px; line-height: 1.8; color: #444; margin-bottom: 15px; }
+
+        .highlight {
+            background: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            color: #004d40;
+        }
+
+        /* 資訊框 */
+        .box { padding: 25px; border-radius: 12px; margin: 25px 0; border-left: 6px solid; font-size: 20px; }
+        .info { background: #e3f2fd; border-color: #2196f3; color: #0d47a1; }
+        .warning { background: #fff3cd; border-color: #ffc107; color: #856404; }
+        .success { background: #d4edda; border-color: #28a745; color: #155724; }
+
+        /* 概念網格 */
+        .concept-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        .concept-card {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid #e9ecef;
+            transition: transform 0.3s;
+            text-align: center;
+        }
+        .concept-card:hover { transform: translateY(-8px); border-color: #4facfe; }
+        .concept-card .icon { font-size: 48px; margin-bottom: 15px; }
+
+        /* 圖片容器 */
+        .image-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .image-container img {
+            max-width: 80%;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        /* 流程圖 */
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin: 30px 0;
+        }
+        .flow-item {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: 600;
+            text-align: center;
+            min-width: 150px;
+        }
+        .flow-arrow {
+            font-size: 30px;
+            color: #1e3c72;
+        }
+
+        /* 頁碼指示器 */
+        .indicators {
+            position: fixed;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            z-index: 4000;
+            padding: 10px 25px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 30px;
+            backdrop-filter: blur(5px);
+        }
+        .dot {
+            width: 12px;
+            height: 12px;
+            background: rgba(255,255,255,0.4);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .dot.active { background: #4facfe; transform: scale(1.3); }
+
+        /* 表格樣式 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            font-size: 18px;
+        }
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        th {
+            background: #1e3c72;
+            color: white;
+            font-weight: 600;
+        }
+        tr:hover {
+            background: #f5f5f5;
+        }
+
+        @media (max-width: 768px) {
+            .content-card { padding: 30px; }
+            h1 { font-size: 36px; }
+            h2 { font-size: 28px; }
+            .nav-arrow { width: 45px; height: 45px; font-size: 18px; }
+            .prev-arrow { left: 10px; }
+            .next-arrow { right: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 導航列 -->
+    <div class="nav-bar">
+        <div class="nav-title">Part 1 - 低軌衛星介紹</div>
+        <div class="nav-buttons">
+            <a href="index.html" class="nav-btn">📚 課程目錄</a>
+            <button class="nav-btn" onclick="toggleFullscreen()">🖥️ 全螢幕</button>
+        </div>
+    </div>
+
+    <!-- 投影片內容 -->
+    <div class="slide-container">
+
+        <!-- Slide 1: 封面 -->
+        <div class="slide active">
+            <div class="content-card" style="text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                <h4>低軌衛星氣象 Line Bot 教學</h4>
+                <h1>Part 1: 低軌衛星介紹</h1>
+                <h2 style="border: none; font-weight: normal; font-size: 28px; color: #666; max-width: 800px;">
+                    認識環繞地球的太空資料收集站
+                </h2>
+                <div style="margin-top: 40px; display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
+                    <span class="highlight">LEO Satellite</span>
+                    <span class="highlight">氣象觀測</span>
+                    <span class="highlight">衛星通訊</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2: 什麼是低軌衛星 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>什麼是低軌衛星？</h2>
+                <p>低軌衛星（Low Earth Orbit Satellite，簡稱 LEO）是指運行在距離地球表面 <strong>160 至 2,000 公里</strong> 高度的人造衛星。</p>
+
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <div class="icon">🌍</div>
+                        <h3>軌道高度</h3>
+                        <p>160 ~ 2,000 公里<br>（相比同步軌道的 35,786 公里）</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="icon">🔄</div>
+                        <h3>繞地週期</h3>
+                        <p>約 90 ~ 120 分鐘<br>一天可繞地球 15-16 圈</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="icon">📡</div>
+                        <h3>訊號延遲</h3>
+                        <p>約 20-40 毫秒<br>比同步衛星快很多</p>
+                    </div>
+                </div>
+
+                <div class="box info">
+                    <strong>為什麼選擇低軌道？</strong> 距離地面較近，訊號延遲低、傳輸速度快，適合即時通訊與高解析度地球觀測。
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: 衛星軌道比較 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>衛星軌道比較</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>軌道類型</th>
+                            <th>高度</th>
+                            <th>繞地週期</th>
+                            <th>主要用途</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>低軌道 (LEO)</strong></td>
+                            <td>160-2,000 km</td>
+                            <td>90-120 分鐘</td>
+                            <td>通訊、地球觀測、氣象</td>
+                        </tr>
+                        <tr>
+                            <td><strong>中軌道 (MEO)</strong></td>
+                            <td>2,000-35,786 km</td>
+                            <td>2-24 小時</td>
+                            <td>GPS 導航系統</td>
+                        </tr>
+                        <tr>
+                            <td><strong>同步軌道 (GEO)</strong></td>
+                            <td>35,786 km</td>
+                            <td>24 小時</td>
+                            <td>電視廣播、氣象監測</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="box warning">
+                    <strong>注意：</strong> 低軌衛星因高度較低，單顆衛星覆蓋範圍有限，需要大量衛星組成「星座」才能實現全球覆蓋。
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: 低軌衛星的應用 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>低軌衛星的應用領域</h2>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <div class="icon">🌤️</div>
+                        <h3>氣象觀測</h3>
+                        <p>收集大氣數據、雲層影像、溫度分布，提供天氣預報資料</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="icon">📶</div>
+                        <h3>衛星通訊</h3>
+                        <p>Starlink、OneWeb 等星座提供全球網路覆蓋</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="icon">🌊</div>
+                        <h3>海洋監測</h3>
+                        <p>追蹤洋流、海水溫度、浪高等海洋資訊</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="icon">🛰️</div>
+                        <h3>地球觀測</h3>
+                        <p>高解析度影像用於農業、城市規劃、災害監測</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: 知名低軌衛星系統 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>知名低軌衛星系統</h2>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <div class="icon">🚀</div>
+                        <h3>Starlink (SpaceX)</h3>
+                        <p>目前最大的低軌衛星星座<br>超過 5,000 顆衛星<br>提供全球網路服務</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="icon">🌐</div>
+                        <h3>OneWeb</h3>
+                        <p>英國衛星通訊公司<br>約 600 顆衛星<br>專注於偏遠地區連線</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="icon">🌡️</div>
+                        <h3>NOAA 氣象衛星</h3>
+                        <p>美國國家海洋暨大氣總署<br>提供全球氣象觀測資料<br>支援天氣預報系統</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="icon">🇹🇼</div>
+                        <h3>福衛系列</h3>
+                        <p>台灣自主發射的衛星<br>福衛五號：遙測衛星<br>福衛七號：氣象觀測</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: 氣象衛星資料流程 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>氣象衛星資料如何到達你手中？</h2>
+                <p>從衛星收集資料到你的 Line Bot 顯示，經過以下流程：</p>
+
+                <div class="flow-diagram">
+                    <div class="flow-item">🛰️<br>衛星收集</div>
+                    <div class="flow-arrow">➜</div>
+                    <div class="flow-item">📡<br>地面站接收</div>
+                    <div class="flow-arrow">➜</div>
+                    <div class="flow-item">💾<br>資料處理中心</div>
+                    <div class="flow-arrow">➜</div>
+                    <div class="flow-item">🔌<br>API 服務</div>
+                    <div class="flow-arrow">➜</div>
+                    <div class="flow-item">📱<br>你的應用</div>
+                </div>
+
+                <div class="box success">
+                    <strong>好消息！</strong> 我們不需要自己架設接收站，只要透過 API 服務（如 OpenWeatherMap、Stormglass），就能取得衛星收集的氣象資料！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: 本課程使用的資料來源 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>本課程使用的資料來源</h2>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <div class="icon">🌤️</div>
+                        <h3>OpenWeatherMap</h3>
+                        <p><strong>天氣資料 API</strong></p>
+                        <ul style="text-align: left;">
+                            <li>即時天氣狀況</li>
+                            <li>溫度、濕度、風速</li>
+                            <li>免費方案：60 次/分鐘</li>
+                        </ul>
+                    </div>
+                    <div class="concept-card">
+                        <div class="icon">🌊</div>
+                        <h3>Stormglass</h3>
+                        <p><strong>海洋資料 API</strong></p>
+                        <ul style="text-align: left;">
+                            <li>海水溫度、浪高</li>
+                            <li>洋流方向與速度</li>
+                            <li>免費方案：10 次/天</li>
+                        </ul>
+                    </div>
+                    <div class="concept-card">
+                        <div class="icon">🛰️</div>
+                        <h3>衛星雲圖</h3>
+                        <p><strong>公開影像連結</strong></p>
+                        <ul style="text-align: left;">
+                            <li>中央氣象署雲圖</li>
+                            <li>日本氣象廳影像</li>
+                            <li>免費公開存取</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8: 總結 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Part 1 總結</h2>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <h3>低軌衛星特性</h3>
+                        <p>高度 160-2000km、低延遲、需要衛星星座覆蓋全球</p>
+                    </div>
+                    <div class="concept-card">
+                        <h3>主要應用</h3>
+                        <p>氣象觀測、衛星通訊、海洋監測、地球觀測</p>
+                    </div>
+                    <div class="concept-card">
+                        <h3>資料取得方式</h3>
+                        <p>透過 API 服務商取得已處理的衛星資料</p>
+                    </div>
+                    <div class="concept-card">
+                        <h3>下一步</h3>
+                        <p>學習如何使用 API 取得天氣與海洋資料</p>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 40px;">
+                    <a href="Part2_衛星訊號與API.html" class="nav-btn" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); padding: 15px 40px; font-size: 18px;">
+                        前往 Part 2：衛星訊號與 API ➜
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 導航箭頭 -->
+    <button class="nav-arrow prev-arrow" id="prevBtn" onclick="changeSlide(-1)">❮</button>
+    <button class="nav-arrow next-arrow" id="nextBtn" onclick="changeSlide(1)">❯</button>
+
+    <!-- 頁碼指示器 -->
+    <div class="indicators" id="indicatorContainer"></div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+
+        function init() {
+            createIndicators();
+            showSlide(0);
+            updateButtons();
+            document.addEventListener('keydown', handleKeydown);
+        }
+
+        function handleKeydown(e) {
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'ArrowRight') changeSlide(1);
+        }
+
+        function createIndicators() {
+            const container = document.getElementById('indicatorContainer');
+            container.innerHTML = '';
+            slides.forEach((_, index) => {
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                dot.onclick = () => goToSlide(index);
+                container.appendChild(dot);
+            });
+        }
+
+        function showSlide(index) {
+            if (index < 0) index = 0;
+            if (index >= totalSlides) index = totalSlides - 1;
+
+            slides.forEach(slide => slide.classList.remove('active'));
+            slides[index].classList.add('active');
+            currentSlide = index;
+
+            const dots = document.querySelectorAll('.dot');
+            dots.forEach((dot, idx) => {
+                dot.classList.toggle('active', idx === index);
+            });
+
+            updateButtons();
+        }
+
+        function changeSlide(direction) {
+            showSlide(currentSlide + direction);
+        }
+
+        function goToSlide(index) {
+            showSlide(index);
+        }
+
+        function updateButtons() {
+            document.getElementById('prevBtn').disabled = currentSlide === 0;
+            document.getElementById('nextBtn').disabled = currentSlide === totalSlides - 1;
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>

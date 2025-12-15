@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Part 3 - Line Bot 設定</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Microsoft JhengHei', 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            color: #333;
+        }
+        .nav-bar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
+            z-index: 10000;
+        }
+        .nav-title { font-size: 22px; font-weight: 700; color: #fff; }
+        .nav-buttons { display: flex; gap: 12px; }
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover { background: rgba(255, 255, 255, 0.4); transform: translateY(-2px); }
+        .nav-arrow {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.25);
+            color: white;
+            width: 60px; height: 60px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.4);
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 9000;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .nav-arrow:hover { background: rgba(255,255,255,0.5); transform: translateY(-50%) scale(1.1); }
+        .prev-arrow { left: 30px; }
+        .next-arrow { right: 30px; }
+        .nav-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
+        .slide-container { width: 100%; height: 100vh; padding-top: 60px; position: relative; z-index: 1; }
+        .slide {
+            position: absolute;
+            top: 60px; left: 0;
+            width: 100%;
+            height: calc(100vh - 60px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: 10;
+        }
+        .slide.active { display: flex; opacity: 1; z-index: 20; }
+        .content-card {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            padding: 60px;
+            max-width: 1400px;
+            width: 95%;
+            max-height: 88vh;
+            overflow-y: auto;
+        }
+        h1 { color: #1e3c72; font-size: 56px; margin-bottom: 24px; text-align: center; }
+        h2 { color: #2a5298; font-size: 38px; margin-bottom: 35px; border-bottom: 3px solid #00B900; padding-bottom: 12px; }
+        h3 { color: #00B900; font-size: 26px; margin: 30px 0 15px 0; }
+        h4 { color: #00B900; font-size: 20px; letter-spacing: 2px; margin-bottom: 10px; }
+        p, li { font-size: 20px; line-height: 1.8; color: #444; margin-bottom: 15px; }
+        code { background: #f0f2f5; padding: 3px 8px; border-radius: 6px; font-family: 'Consolas', monospace; color: #00B900; font-weight: 600; }
+        .highlight { background: linear-gradient(120deg, #00B900 0%, #00C300 100%); padding: 2px 8px; border-radius: 4px; font-weight: bold; color: white; }
+        .box { padding: 25px; border-radius: 12px; margin: 25px 0; border-left: 6px solid; font-size: 20px; }
+        .info { background: #e3f2fd; border-color: #2196f3; color: #0d47a1; }
+        .warning { background: #fff3cd; border-color: #ffc107; color: #856404; }
+        .success { background: #d4edda; border-color: #00B900; color: #155724; }
+        .concept-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-top: 30px; }
+        .concept-card { background: #f8f9fa; padding: 25px; border-radius: 15px; border: 1px solid #e9ecef; transition: transform 0.3s; }
+        .concept-card:hover { transform: translateY(-8px); border-color: #00B900; }
+        .concept-card .icon { font-size: 48px; margin-bottom: 15px; text-align: center; }
+        .step-list { counter-reset: step; list-style: none; padding: 0; }
+        .step-list li { counter-increment: step; padding: 20px 20px 20px 70px; position: relative; background: #f8f9fa; margin-bottom: 15px; border-radius: 10px; }
+        .step-list li::before { content: counter(step); position: absolute; left: 20px; top: 50%; transform: translateY(-50%); background: #00B900; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; }
+        .indicators { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; z-index: 4000; padding: 10px 25px; background: rgba(0,0,0,0.3); border-radius: 30px; }
+        .dot { width: 12px; height: 12px; background: rgba(255,255,255,0.4); border-radius: 50%; cursor: pointer; }
+        .dot.active { background: #00B900; transform: scale(1.3); }
+        .line-green { background: linear-gradient(135deg, #00B900 0%, #00C300 100%); color: white; padding: 30px; border-radius: 20px; margin: 20px 0; }
+        .line-green h3 { color: white; margin-top: 0; }
+        .screenshot-placeholder { background: #e9ecef; border: 2px dashed #adb5bd; border-radius: 15px; padding: 40px; text-align: center; color: #6c757d; margin: 20px 0; }
+        @media (max-width: 768px) { .content-card { padding: 30px; } h1 { font-size: 36px; } h2 { font-size: 28px; } }
+    </style>
+</head>
+<body>
+    <div class="nav-bar">
+        <div class="nav-title">Part 3 - Line Bot 設定</div>
+        <div class="nav-buttons">
+            <a href="index.html" class="nav-btn">📚 課程目錄</a>
+            <button class="nav-btn" onclick="toggleFullscreen()">🖥️ 全螢幕</button>
+        </div>
+    </div>
+
+    <div class="slide-container">
+        <!-- Slide 1: 封面 -->
+        <div class="slide active">
+            <div class="content-card" style="text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                <h4>低軌衛星氣象 Line Bot 教學</h4>
+                <h1>Part 3: Line Bot 設定</h1>
+                <h2 style="border: none; font-weight: normal; font-size: 28px; color: #666; max-width: 800px;">
+                    建立你的 Line Bot 並取得 Access Token
+                </h2>
+                <div style="margin-top: 40px; display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
+                    <span class="highlight">Line Developers</span>
+                    <span class="highlight">Messaging API</span>
+                    <span class="highlight">Webhook</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2: Line Bot 介紹 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>什麼是 Line Bot？</h2>
+                <p>Line Bot 是一種自動化的聊天機器人，可以接收使用者訊息並自動回覆。</p>
+
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <div class="icon">💬</div>
+                        <h3>自動回覆</h3>
+                        <p>根據使用者輸入的關鍵字，自動回覆對應的內容</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="icon">🔗</div>
+                        <h3>API 整合</h3>
+                        <p>可以串接外部 API，取得即時資料並回傳給使用者</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="icon">🆓</div>
+                        <h3>免費使用</h3>
+                        <p>Line Messaging API 提供免費方案，適合個人專案使用</p>
+                    </div>
+                </div>
+
+                <div class="box info">
+                    <strong>運作原理：</strong> 使用者發送訊息 → Line 伺服器 → Webhook 通知你的伺服器 → 處理後回覆
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: 建立 Line Developers 帳號 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Step 1：建立 Line Developers 帳號</h2>
+                <ol class="step-list">
+                    <li>前往 <code>https://developers.line.biz/</code></li>
+                    <li>點擊右上角「Log in」</li>
+                    <li>使用你的 Line 帳號登入（掃描 QR Code 或輸入帳號密碼）</li>
+                    <li>首次登入需要同意開發者條款</li>
+                </ol>
+
+                <div class="line-green">
+                    <h3>💡 提示</h3>
+                    <p>Line Developers 帳號與你的 Line 帳號是連動的，登入後會自動建立開發者帳號。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: 建立 Provider -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Step 2：建立 Provider</h2>
+                <p>Provider 是管理你所有 Bot 的容器，類似於公司或品牌名稱。</p>
+
+                <ol class="step-list">
+                    <li>登入後，點擊「Create a new provider」</li>
+                    <li>輸入 Provider 名稱（例如：「我的專案」、「氣象機器人」）</li>
+                    <li>點擊「Create」建立</li>
+                </ol>
+
+                <div class="box warning">
+                    <strong>注意：</strong> Provider 名稱會顯示在 Bot 的資訊頁面中，建議使用有意義的名稱。
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: 建立 Messaging API Channel -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Step 3：建立 Messaging API Channel</h2>
+                <ol class="step-list">
+                    <li>在 Provider 頁面，點擊「Create a Messaging API channel」</li>
+                    <li>填寫 Channel 基本資訊：
+                        <ul style="margin-top: 10px;">
+                            <li><strong>Channel name：</strong>機器人顯示名稱（如：低軌衛星氣象）</li>
+                            <li><strong>Channel description：</strong>機器人說明</li>
+                            <li><strong>Category：</strong>選擇適合的類別</li>
+                            <li><strong>Email：</strong>聯絡信箱</li>
+                        </ul>
+                    </li>
+                    <li>同意條款後點擊「Create」</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Slide 6: 取得 Channel Access Token -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Step 4：取得 Channel Access Token</h2>
+                <p>Access Token 是你的程式與 Line 伺服器溝通的「通行證」。</p>
+
+                <ol class="step-list">
+                    <li>進入剛建立的 Channel</li>
+                    <li>切換到「Messaging API」分頁</li>
+                    <li>滑到最下方找到「Channel access token」</li>
+                    <li>點擊「Issue」產生 Token</li>
+                    <li>複製並安全保存這組 Token</li>
+                </ol>
+
+                <div class="box warning">
+                    <strong>重要！</strong> Access Token 只會顯示一次，請務必複製保存。如果遺失，可以重新 Issue 新的 Token（舊的會失效）。
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: 關閉自動回覆 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Step 5：關閉預設功能</h2>
+                <p>為了讓我們的程式完全控制回覆，需要關閉 Line 的預設功能。</p>
+
+                <ol class="step-list">
+                    <li>在 Messaging API 分頁中，找到「LINE Official Account features」</li>
+                    <li>點擊「Edit」進入設定頁面</li>
+                    <li>關閉以下功能：
+                        <ul style="margin-top: 10px;">
+                            <li><strong>Auto-reply messages：</strong>設為 Disabled</li>
+                            <li><strong>Greeting messages：</strong>設為 Disabled</li>
+                        </ul>
+                    </li>
+                </ol>
+
+                <div class="box success">
+                    <strong>為什麼要關閉？</strong> 關閉後，所有訊息都會透過 Webhook 傳到我們的程式處理，而不是使用 Line 的預設回覆。
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8: Webhook 設定 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Step 6：設定 Webhook URL</h2>
+                <p>Webhook 是 Line 通知你的程式「有新訊息」的方式。</p>
+
+                <ol class="step-list">
+                    <li>在 Messaging API 分頁中，找到「Webhook settings」</li>
+                    <li>點擊「Edit」</li>
+                    <li>填入你的 Webhook URL（部署 GAS 後會取得）</li>
+                    <li>開啟「Use webhook」</li>
+                </ol>
+
+                <div class="box info">
+                    <strong>URL 格式範例：</strong><br>
+                    <code>https://script.google.com/macros/s/xxxxx.../exec</code>
+                </div>
+
+                <div class="box warning">
+                    <strong>注意：</strong> Webhook URL 需要等到 Part 5 部署完成後才會取得，目前先跳過這步驟。
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9: 加入好友 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Step 7：取得 Bot QR Code</h2>
+                <p>建立完成後，可以透過 QR Code 加入你的 Bot 好友。</p>
+
+                <ol class="step-list">
+                    <li>在 Messaging API 分頁中，找到「Bot information」區域</li>
+                    <li>可以看到 Bot 的 QR Code</li>
+                    <li>使用 Line App 掃描即可加入好友</li>
+                </ol>
+
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <div class="icon">📱</div>
+                        <h3>QR Code</h3>
+                        <p>掃描加入好友</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="icon">🔗</div>
+                        <h3>Bot ID</h3>
+                        <p>可分享 @開頭的 ID</p>
+                    </div>
+                    <div class="concept-card">
+                        <div class="icon">🌐</div>
+                        <h3>好友連結</h3>
+                        <p>可產生加好友網址</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 10: 總結 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Part 3 總結</h2>
+                <p>現在你已經擁有：</p>
+
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <h3>✅ Line Bot</h3>
+                        <p>已建立的 Messaging API Channel</p>
+                    </div>
+                    <div class="concept-card">
+                        <h3>✅ Access Token</h3>
+                        <p>程式與 Line 溝通的金鑰</p>
+                    </div>
+                    <div class="concept-card">
+                        <h3>✅ QR Code</h3>
+                        <p>可供掃描加入好友</p>
+                    </div>
+                    <div class="concept-card">
+                        <h3>⏳ Webhook URL</h3>
+                        <p>等部署後再設定</p>
+                    </div>
+                </div>
+
+                <div class="line-green" style="margin-top: 30px;">
+                    <h3>📋 請記下以下資訊：</h3>
+                    <p>• Channel Access Token（已複製保存）</p>
+                    <p>• Channel ID（可在 Basic settings 找到）</p>
+                </div>
+
+                <div style="text-align: center; margin-top: 40px;">
+                    <a href="Part4_GAS程式開發.html" class="nav-btn" style="background: linear-gradient(135deg, #00B900 0%, #00C300 100%); padding: 15px 40px; font-size: 18px;">
+                        前往 Part 4：GAS 程式開發 ➜
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="nav-arrow prev-arrow" id="prevBtn" onclick="changeSlide(-1)">❮</button>
+    <button class="nav-arrow next-arrow" id="nextBtn" onclick="changeSlide(1)">❯</button>
+    <div class="indicators" id="indicatorContainer"></div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+
+        function init() {
+            createIndicators();
+            showSlide(0);
+            updateButtons();
+            document.addEventListener('keydown', handleKeydown);
+        }
+
+        function handleKeydown(e) {
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'ArrowRight') changeSlide(1);
+        }
+
+        function createIndicators() {
+            const container = document.getElementById('indicatorContainer');
+            slides.forEach((_, index) => {
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                dot.onclick = () => goToSlide(index);
+                container.appendChild(dot);
+            });
+        }
+
+        function showSlide(index) {
+            if (index < 0) index = 0;
+            if (index >= totalSlides) index = totalSlides - 1;
+            slides.forEach(slide => slide.classList.remove('active'));
+            slides[index].classList.add('active');
+            currentSlide = index;
+            document.querySelectorAll('.dot').forEach((dot, idx) => {
+                dot.classList.toggle('active', idx === index);
+            });
+            updateButtons();
+        }
+
+        function changeSlide(direction) { showSlide(currentSlide + direction); }
+        function goToSlide(index) { showSlide(index); }
+        function updateButtons() {
+            document.getElementById('prevBtn').disabled = currentSlide === 0;
+            document.getElementById('nextBtn').disabled = currentSlide === totalSlides - 1;
+        }
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+            else if (document.exitFullscreen) document.exitFullscreen();
+        }
+        init();
+    </script>
+</body>
+</html>
