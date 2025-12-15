@@ -36,7 +36,7 @@
 
 ### 3. 使用程式碼生成器
 
-前往 [程式碼生成器](./generator/index.html) 填入 API Key，自動生成完整 GAS 程式碼。
+前往 **[GAS 程式碼生成器](https://leo-gas-linebot.netlify.app/)** 填入 API Key，自動生成完整 GAS 程式碼。
 
 ### 4. 部署到 Google Apps Script
 
