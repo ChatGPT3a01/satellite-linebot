@@ -187,7 +187,7 @@
             list-style: none;
             padding: 0;
         }
-        .step-list li {
+        .step-list > li {
             counter-increment: step;
             padding: 15px 15px 15px 60px;
             position: relative;
@@ -195,12 +195,11 @@
             margin-bottom: 15px;
             border-radius: 10px;
         }
-        .step-list li::before {
+        .step-list > li::before {
             content: counter(step);
             position: absolute;
             left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
+            top: 15px;
             background: #1e3c72;
             color: white;
             width: 35px;
@@ -211,6 +210,8 @@
             justify-content: center;
             font-weight: bold;
         }
+        .step-list li ul { margin-top: 10px; margin-left: 20px; }
+        .step-list li ul li { background: none; padding: 5px 0; margin-bottom: 5px; }
 
         table {
             width: 100%;

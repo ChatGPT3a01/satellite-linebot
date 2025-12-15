@@ -88,8 +88,10 @@
         .concept-card:hover { transform: translateY(-8px); border-color: #4285f4; }
         .concept-card .icon { font-size: 48px; margin-bottom: 15px; text-align: center; }
         .step-list { counter-reset: step; list-style: none; padding: 0; }
-        .step-list li { counter-increment: step; padding: 20px 20px 20px 70px; position: relative; background: #f8f9fa; margin-bottom: 15px; border-radius: 10px; }
-        .step-list li::before { content: counter(step); position: absolute; left: 20px; top: 50%; transform: translateY(-50%); background: #4285f4; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; }
+        .step-list > li { counter-increment: step; padding: 20px 20px 20px 70px; position: relative; background: #f8f9fa; margin-bottom: 15px; border-radius: 10px; }
+        .step-list > li::before { content: counter(step); position: absolute; left: 20px; top: 20px; background: #4285f4; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; }
+        .step-list li ul { margin-top: 10px; margin-left: 20px; }
+        .step-list li ul li { background: none; padding: 5px 0; margin-bottom: 5px; }
         .indicators { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; z-index: 4000; padding: 10px 25px; background: rgba(0,0,0,0.3); border-radius: 30px; }
         .dot { width: 12px; height: 12px; background: rgba(255,255,255,0.4); border-radius: 50%; cursor: pointer; }
         .dot.active { background: #4285f4; transform: scale(1.3); }
