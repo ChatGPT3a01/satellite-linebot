@@ -2,6 +2,22 @@
 
 使用 Google Apps Script 建立的低軌衛星氣象查詢 Line Bot，支援天氣、海洋洋流資料查詢與衛星雲圖連結。
 
+## 📖 教學簡報
+
+👉 **[點此觀看線上簡報](https://chatgpt3a01.github.io/satellite-linebot/slides/)**
+
+| 單元 | 主題 | 連結 |
+|------|------|------|
+| Part 1 | 低軌衛星介紹 | [觀看](https://chatgpt3a01.github.io/satellite-linebot/slides/Part1_低軌衛星介紹.html) |
+| Part 2 | 衛星訊號與 API | [觀看](https://chatgpt3a01.github.io/satellite-linebot/slides/Part2_衛星訊號與API.html) |
+| Part 3 | Line Bot 設定 | [觀看](https://chatgpt3a01.github.io/satellite-linebot/slides/Part3_Line_Bot設定.html) |
+| Part 4 | GAS 程式開發 | [觀看](https://chatgpt3a01.github.io/satellite-linebot/slides/Part4_GAS程式開發.html) |
+| Part 5 | 部署與測試 | [觀看](https://chatgpt3a01.github.io/satellite-linebot/slides/Part5_部署與測試.html) |
+
+🚀 **[GAS 程式碼生成器](https://leo-gas-linebot.netlify.app/)**
+
+---
+
 ## 功能特色
 
 - 🌤️ **天氣查詢** - 透過 OpenWeatherMap API 取得即時天氣資訊
@@ -64,20 +80,6 @@ satellite-linebot/
     ├── Part4_GAS程式開發.html
     └── Part5_部署與測試.html
 ```
-
-## 教學簡報
-
-👉 **[點此觀看線上簡報](https://chatgpt3a01.github.io/satellite-linebot/slides/)**
-
-完整的 5 單元教學簡報，涵蓋：
-
-| 單元 | 主題 | 連結 |
-|------|------|------|
-| Part 1 | 低軌衛星介紹 | [觀看](https://chatgpt3a01.github.io/satellite-linebot/slides/Part1_低軌衛星介紹.html) |
-| Part 2 | 衛星訊號與 API | [觀看](https://chatgpt3a01.github.io/satellite-linebot/slides/Part2_衛星訊號與API.html) |
-| Part 3 | Line Bot 設定 | [觀看](https://chatgpt3a01.github.io/satellite-linebot/slides/Part3_Line_Bot設定.html) |
-| Part 4 | GAS 程式開發 | [觀看](https://chatgpt3a01.github.io/satellite-linebot/slides/Part4_GAS程式開發.html) |
-| Part 5 | 部署與測試 | [觀看](https://chatgpt3a01.github.io/satellite-linebot/slides/Part5_部署與測試.html) |
 
 ## API 資料來源
 
